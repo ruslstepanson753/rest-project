@@ -39,4 +39,34 @@ public class HttpClientTestDemo {
         Assertions.assertTrue(body.contains("</body>"));
         httpClient.close();
     }
+
+    @Test
+    public void whenSendDeleteRequest_thenReturnCorrectResponse() throws Exception {
+        HttpClient httpClient = HttpClient.newBuilder()
+                .version(HttpClient.Version.HTTP_1_1)
+                .connectTimeout(Duration.ofSeconds(1))
+                .build();
+
+        HttpRequest httpRequest = HttpRequest.newBuilder()
+                .DELETE()
+                .uri(URI.create("http://localhost:1234/messages/1"))
+                .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36")
+                .build();
+
+        HttpResponse<String> httpResponse = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
+
+        int statusCode = httpResponse.statusCode();
+        String responseBody = httpResponse.body();
+
+        // Проверка статуса и содержимого тела в зависимости от успешности удаления
+        if (statusCode == 200) {
+            Assertions.assertEquals("true", responseBody, "Response body should be 'true' for successful DELETE request");
+        } else if (statusCode == 405) {
+            Assertions.assertEquals("false", responseBody, "Response body should be 'false' for unsuccessful DELETE request");
+        } else {
+            Assertions.fail("Unexpected status code: " + statusCode);
+        }
+
+        httpClient.close();
+    }
 }
